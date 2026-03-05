@@ -1,5 +1,6 @@
 // entry point for the card organizer flutter app
 import 'package:flutter/material.dart';
+import 'screens/folders_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,9 +18,7 @@ class CardOrganizerApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.grey[100],
       ),
-      home: Scaffold(
-        body: Center(child: Text('Card Organizer')),
-      ),
+      home: FoldersScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
