@@ -27,12 +27,24 @@ class _CardsScreenState extends State<CardsScreen> {
 
   Future<void> _loadCards() async {
     setState(() => _isLoading = true);
-    // load all cards for the active folder from the repository
-    final cards = await _cardRepository.getCardsByFolderId(widget.folder.id!);
-    setState(() {
-      _cards = cards;
-      _isLoading = false;
-    });
+    try {
+      // load all cards for the active folder from the repository
+      final cards = await _cardRepository.getCardsByFolderId(widget.folder.id!);
+      if (!mounted) return;
+      setState(() {
+        _cards = cards;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not load cards. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _deleteCard(PlayingCard card) async {
@@ -56,12 +68,22 @@ class _CardsScreenState extends State<CardsScreen> {
     );
 
     if (confirmed == true) {
-      await _cardRepository.deleteCard(card.id!);
-      _loadCards();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${card.cardName} deleted')),
-      );
+      try {
+        await _cardRepository.deleteCard(card.id!);
+        if (!mounted) return;
+        _loadCards();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${card.cardName} deleted')),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not delete card. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

@@ -42,16 +42,28 @@ class _AddEditCardScreenState extends State<AddEditCardScreen> {
   }
 
   Future<void> _loadFolders() async {
-    // load folders so the user can assign the card to any folder
-    final folders = await _folderRepository.getAllFolders();
-    setState(() {
-      _folders = folders;
-      // ensure the selected folder id exists in the dropdown list
-      if (!_folders.any((f) => f.id == _selectedFolderId) && _folders.isNotEmpty) {
-        _selectedFolderId = _folders.first.id;
-      }
-      _isLoading = false;
-    });
+    try {
+      // load folders so the user can assign the card to any folder
+      final folders = await _folderRepository.getAllFolders();
+      if (!mounted) return;
+      setState(() {
+        _folders = folders;
+        // ensure the selected folder id exists in the dropdown list
+        if (!_folders.any((f) => f.id == _selectedFolderId) && _folders.isNotEmpty) {
+          _selectedFolderId = _folders.first.id;
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not load folders. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -62,23 +74,32 @@ class _AddEditCardScreenState extends State<AddEditCardScreen> {
   }
 
   void _saveCard() async {
-    if (_formKey.currentState!.validate()) {
-      final newCard = PlayingCard(
-        id: widget.card?.id,
-        cardName: _nameController.text.trim(),
-        suit: _selectedSuit,
-        imageUrl: _imageController.text.trim().isEmpty ? null : _imageController.text.trim(),
-        folderId: _selectedFolderId!,
-      );
+    if (!_formKey.currentState!.validate()) return;
 
+    final newCard = PlayingCard(
+      id: widget.card?.id,
+      cardName: _nameController.text.trim(),
+      suit: _selectedSuit,
+      imageUrl: _imageController.text.trim().isEmpty ? null : _imageController.text.trim(),
+      folderId: _selectedFolderId!,
+    );
+
+    try {
       if (widget.card == null) {
         await _cardRepository.insertCard(newCard);
       } else {
         await _cardRepository.updateCard(newCard);
       }
-
       if (!mounted) return;
       Navigator.pop(context, true); // return true to signal a refresh is needed
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save card. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

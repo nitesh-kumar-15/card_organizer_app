@@ -29,19 +29,31 @@ class _FoldersScreenState extends State<FoldersScreen> {
       _isLoading = true;
     });
 
-    // load all folders and their card counts from the database
-    final folders = await _folderRepository.getAllFolders();
-    final Map<int, int> counts = {};
+    try {
+      // load all folders and their card counts from the database
+      final folders = await _folderRepository.getAllFolders();
+      final Map<int, int> counts = {};
 
-    for (var folder in folders) {
-      counts[folder.id!] = await _cardRepository.getCardCountByFolder(folder.id!);
+      for (var folder in folders) {
+        counts[folder.id!] = await _cardRepository.getCardCountByFolder(folder.id!);
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _folders = folders;
+        _cardCounts = counts;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not load folders. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-
-    setState(() {
-      _folders = folders;
-      _cardCounts = counts;
-      _isLoading = false;
-    });
   }
 
   Future<void> _deleteFolder(Folder folder) async {
@@ -68,11 +80,22 @@ class _FoldersScreenState extends State<FoldersScreen> {
     );
 
     if (confirmed == true) {
-      await _folderRepository.deleteFolder(folder.id!);
-      _loadFolders();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Folder "${folder.folderName}" deleted')),
-      );
+      try {
+        await _folderRepository.deleteFolder(folder.id!);
+        if (!mounted) return;
+        _loadFolders();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Folder "${folder.folderName}" deleted')),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not delete folder. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
