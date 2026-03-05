@@ -1,0 +1,26 @@
+name: card_organizer_app
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: ^2.0.3
+  path: ^1.8.0
+  path_provider: ^2.0.11
+  image_picker: ^0.8.6  # For bonus features
+  http: ^0.13.0         # For network images if needed
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/cards/
